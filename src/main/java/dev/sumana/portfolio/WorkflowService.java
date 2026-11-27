@@ -40,4 +40,10 @@ public class WorkflowService {
         repository.deleteById(id);
     }
 
+    public List<WorkflowRecord> search(String value) {
+        if (value == null || value.isBlank()) {
+            return repository.findAll();
+        }
+        return repository.findByStatusIgnoreCase(value.trim());
+    }
 }
