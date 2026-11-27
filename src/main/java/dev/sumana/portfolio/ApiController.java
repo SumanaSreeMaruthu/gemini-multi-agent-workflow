@@ -2,18 +2,9 @@ package dev.sumana.portfolio;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
-import java.time.Instant;
-import java.util.Collection;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
@@ -23,34 +14,33 @@ public class ApiController {
     public record Request(@NotBlank String task) {
     }
 
-    public record Response(String id, String status, String result, Instant createdAt) {
+    private final WorkflowRecordRepository repository;
+    private final GeminiClient gemini;
+
+    public ApiController(WorkflowRecordRepository repository, GeminiClient gemini) {
+        this.repository = repository;
+        this.gemini = gemini;
     }
 
-    private final Map<String, Response> items = new ConcurrentHashMap<>();
-
     @PostMapping
-    public Response create(@Valid @RequestBody Request request) {
-        String id = UUID.randomUUID().toString();
-        Response response = new Response(
-                id,
-                "CREATED",
-                "Received: " + request.task(),
-                Instant.now());
-        items.put(id, response);
-        return response;
+    @ResponseStatus(HttpStatus.CREATED)
+    public WorkflowRecord run(@Valid @RequestBody Request request) {
+        String plan = gemini.generate(
+                "You are a planning assistant. Produce a short numbered plan for: " + request.task());
+        String review = gemini.generate(
+                "You are a quality reviewer. Critique this plan, identify risks, and propose improvements: " + plan);
+        return repository.save(new WorkflowRecord(request.task(),
+                "PLAN:\n" + plan + "\n\nREVIEW:\n" + review));
     }
 
     @GetMapping
-    public Collection<Response> list() {
-        return items.values();
+    public List<WorkflowRecord> list() {
+        return repository.findAll();
     }
 
     @GetMapping("/{id}")
-    public Response get(@PathVariable String id) {
-        Response response = items.get(id);
-        if (response == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found");
-        }
-        return response;
+    public WorkflowRecord get(@PathVariable Long id) {
+        return repository.findById(id).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Not found"));
     }
 }
