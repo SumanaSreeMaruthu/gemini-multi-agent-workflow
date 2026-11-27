@@ -1,23 +1,19 @@
-# Gemini Multi-Agent Workflow
+# Gemini Planning & Review Workflow
 
-Java 21 Spring Boot **starter** by Sumana Sree Maruthu.
+Java 21 Spring Boot workflow demonstration with a two-stage Gemini prompt pipeline.
 
-**Status:** REST API demo only. Gemini integration, AI agents, RAG, vector search, databases, authentication, and frontend are planned, **not implemented**.
+## Implemented
+- Gemini 2.5 Flash planning call followed by a review call
+- H2/JPA persistent workflow history
+- REST `POST /api/v1/workflows`, `GET /api/v1/workflows`, `GET /api/v1/workflows/{id}`
+- Browser interface at `http://localhost:8080/`
+- Basic context test, Dockerfile and CI
 
 ## Run
-Requires Java 21 and Maven 3.9+.
 ```bash
+export GEMINI_API_KEY=your_key_here
 mvn spring-boot:run
-mvn test
-curl -X POST http://localhost:8080/api/v1/workflows -H 'Content-Type: application/json' -d '{"task":"example"}'
 ```
 
-## Roadmap
-- [ ] Gemini API integration with secure environment variables
-- [ ] Service and repository layers
-- [ ] Persistent database and migrations
-- [ ] Integration and security tests
-- [ ] React or Angular frontend
-- [ ] Docker Compose and deployment
-
-Use only synthetic data.
+## Limitations
+This is a **two-stage LLM pipeline**, not a full autonomous multi-agent framework. No external tools, autonomous execution, authentication, distributed queue, retries, structured JSON validation or comprehensive integration tests. Do not send confidential data. Build has not been independently verified.
