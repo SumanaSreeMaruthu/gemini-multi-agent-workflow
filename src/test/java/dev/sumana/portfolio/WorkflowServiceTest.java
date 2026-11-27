@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import dev.sumana.portfolio.agent.WorkflowOrchestrator;
+import dev.sumana.portfolio.audit.ActivityService;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,7 +22,10 @@ class WorkflowServiceTest {
     private WorkflowRecordRepository repository;
 
     @Mock
-    private GeminiClient gemini;
+    private WorkflowOrchestrator orchestrator;
+
+    @Mock
+    private ActivityService activity;
 
     @InjectMocks
     private WorkflowService service;
