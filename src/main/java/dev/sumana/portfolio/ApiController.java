@@ -34,4 +34,8 @@ public class ApiController {
     public WorkflowRecord create(@Valid @RequestBody Request request) {
         return service.create(request);
     }
+    @GetMapping("/search")
+    public List<WorkflowRecord> search(@RequestParam(required = false) String status) {
+        return service.search(status);
+    }
 }
