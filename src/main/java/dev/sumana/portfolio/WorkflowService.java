@@ -1,6 +1,8 @@
 package dev.sumana.portfolio;
 
 import java.util.List;
+import dev.sumana.portfolio.agent.WorkflowOrchestrator;
+import dev.sumana.portfolio.agent.WorkflowResult;
 import dev.sumana.portfolio.audit.ActivityService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -13,12 +15,12 @@ public class WorkflowService {
 
     private final WorkflowRecordRepository repository;
     private final ActivityService activity;
-    private final GeminiClient gemini;
+    private final WorkflowOrchestrator orchestrator;
 
-    public WorkflowService(WorkflowRecordRepository repository, GeminiClient gemini, ActivityService activity) {
+    public WorkflowService(WorkflowRecordRepository repository, WorkflowOrchestrator orchestrator, ActivityService activity) {
         this.repository = repository;
         this.activity = activity;
-        this.gemini = gemini;
+        this.orchestrator = orchestrator;
     }
 
     public List<WorkflowRecord> list() {
@@ -32,7 +34,8 @@ public class WorkflowService {
 
     @Transactional
     public WorkflowRecord create(ApiController.Request request) {
-        WorkflowRecord saved = repository.save(new WorkflowRecord(request.task(), gemini.generate("You are a quality reviewer. Critique and improve this plan: " + gemini.generate("Create a numbered plan for: " + request.task()))));
+        WorkflowResult result = orchestrator.execute(request.task());
+        WorkflowRecord saved = repository.save(new WorkflowRecord(request.task(), result.asText()));
         activity.record("CREATED", "WorkflowRecord", saved.getId());
         return saved;
     }
